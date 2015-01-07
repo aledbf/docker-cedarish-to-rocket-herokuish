@@ -1,0 +1,25 @@
+{
+    "acVersion": "0.0.1",
+    "acKind": "ImageManifest",
+    "name": "aledbf/rocket-herokuish-nodejs",
+    "app": {
+        "exec": [
+            "/runner/init"
+        ]
+    },
+    "dependencies":[{
+        "name": "slugrunner",
+        "app": "aledbf/slugrunner",
+        "imageID": "sha512-#SH512#"
+    }],
+    "ports":[
+        {
+            "name": "web",
+            "protocol": "tcp",
+            "port": 5000
+        }
+    ],
+    "annotations": {
+        "authors": "Manuel Alejandro de Brito Fontes <aledbf@gmail.com>"
+    }
+}

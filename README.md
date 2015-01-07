@@ -1,1 +1,19 @@
-# rocket-builder-prototype
+docker-cedarish-to-rocket-herokuish
+===================================
+
+This is an experiment to "port" the use of [cedarish](https://github.com/progrium/cedarish) using docker in [deis](https://github.com/deis/deis)
+to [herokuish](https://github.com/gliderlabs/herokuish) using [rocket](https://github.com/coreos/rocket) to build apps in a heroku like way
+
+steps:
+1. build the application inside docker using herokuish
+2. extract a compressed tar file in a rootfs directory
+3. convert the deis/slugrunner docker image required to run apps to rocket format
+4. build a rocket image that will be used as parent in the final application image (to allow the reuse)
+5. build an image for the app
+
+TODO:
+[] - create a rocket herokuish image (with all the required dependencies to build apps)
+[] - remove docker "dependency" :P
+[] - ...
+[] - ...
+
