@@ -11,10 +11,10 @@ steps:
 3. convert deis/slugrunner docker image required to run apps (slugrunner.aci)
 4. build an image for the compiled app using slugrunner.aci as dependency
 
-TODO:
+*TODO:*
 
-[] - create a rocket herokuish image (with all the required dependencies to build apps)
-[] - remove docker "dependency" :P
-[] - ...
-[] - ...
+- [] create a rocket herokuish image (with all the required dependencies to build apps)
+- [] remove docker "dependency" :P
+- [] ...
+- [] ...
 
