@@ -1,13 +1,18 @@
 {
-    "acVersion": "0.0.1",
+    "acVersion": "0.1.1",
     "acKind": "ImageManifest",
     "name": "aledbf/slugrunner",
     "app": {
         "exec": [
             "/runner/init"
-        ]
+        ],
+        "user": "100",
+        "group": "300"
     },
-    "annotations": {
-        "authors": "Manuel Alejandro de Brito Fontes <aledbf@gmail.com>"
-    }
+    "annotations": [
+        {
+            "name": "authors",
+            "value": "Manuel Alejandro de Brito Fontes <aledbf@gmail.com>"
+        }
+    ]
 }

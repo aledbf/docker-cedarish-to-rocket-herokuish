@@ -1,16 +1,17 @@
 {
-    "acVersion": "0.0.1",
+    "acVersion": "0.1.1",
     "acKind": "ImageManifest",
     "name": "aledbf/rocket-herokuish-nodejs",
     "app": {
         "exec": [
             "/runner/init"
-        ]
+        ],
+        "user": "100",
+        "group": "300"
     },
     "dependencies":[{
-        "name": "slugrunner",
         "app": "aledbf/slugrunner",
-        "imageID": "sha512-#SH512#"
+        "imageID": "sha512-#SHA512#"
     }],
     "ports":[
         {
@@ -19,7 +20,10 @@
             "port": 5000
         }
     ],
-    "annotations": {
-        "authors": "Manuel Alejandro de Brito Fontes <aledbf@gmail.com>"
-    }
+    "annotations": [
+        {
+            "name": "authors",
+            "value": "Manuel Alejandro de Brito Fontes <aledbf@gmail.com>"
+        }
+    ]
 }

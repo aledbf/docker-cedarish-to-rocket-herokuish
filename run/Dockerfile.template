@@ -1,0 +1,19 @@
+FROM google/golang
+
+WORKDIR /tmp
+
+RUN apt-get update && apt-get install -y curl cpio squashfs-tools realpath
+
+RUN go get github.com/jteeuwen/go-bindata/...  && \
+  go get github.com/appc/spec/...  && \
+  git clone https://github.com/coreos/rocket.git rocket && \
+  cd rocket && \
+  ./build && \
+  cp bin/* /usr/local/bin
+
+#RUN rkt --debug run http://192.168.59.104:8080/aledbf/rocket-herokuish-nodejs.aci
+
+RUN echo http://#IP#:8080/aledbf/rocket-herokuish-nodejs.aci
+
+ENTRYPOINT /bin/bash
+
