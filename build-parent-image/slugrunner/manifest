@@ -6,8 +6,8 @@
         "exec": [
             "/runner/init"
         ],
-        "user": "100",
-        "group": "300"
+        "user": "0",
+        "group": "0"
     },
     "annotations": [
         {

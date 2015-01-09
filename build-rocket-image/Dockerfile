@@ -1,27 +1,26 @@
 FROM google/golang
 
-USER root
-
 ENTRYPOINT /bin/bash
 
 WORKDIR /tmp
 
-RUN apt-get update && apt-get install -y curl
+RUN apt-get update && apt-get install -y cpio squashfs-tools realpath
+
+RUN mkdir -p /dist
+
+RUN go get github.com/jteeuwen/go-bindata/... && go get github.com/appc/spec/...
+
+RUN git clone https://github.com/coreos/rocket.git rocket && \
+  cd rocket && \
+  ./build && \
+  cp bin/* /dist
 
 RUN cd $GOPATH && \
   mkdir -p github.com/appc/ && \
   git clone https://github.com/appc/spec github.com/appc/spec && \
-  mkdir -p github.com/coreos/ && \
-  git clone https://github.com/coreos/rocket github.com/coreos/rocket && \
   cd $GOPATH/github.com/appc/spec && \
   ./build && \
-  cp bin/* /usr/local/bin
+  cp bin/* /dist
 
-ADD . /tmp
-
-RUN actool validate demo
-
-RUN actool build demo rocket-herokuish-nodejs.aci
-
-RUN actool validate rocket-herokuish-nodejs.aci
+RUN cd /dist && tar -cvzf /tools.tgz *
 

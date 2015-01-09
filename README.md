@@ -1,8 +1,7 @@
 docker-cedarish-to-rocket-herokuish
 ===================================
 
-This is an experiment to "port" the use of [cedarish](https://github.com/progrium/cedarish) using docker in [deis](https://github.com/deis/deis)
-to [herokuish](https://github.com/gliderlabs/herokuish) using [rocket](https://github.com/coreos/rocket) to build apps in a heroku like way
+This is an experiment to "port" the use of [cedarish](https://github.com/progrium/cedarish) using docker in [deis](https://github.com/deis/deis) to [herokuish](https://github.com/gliderlabs/herokuish) using [rocket](https://github.com/coreos/rocket) to build apps ala Heroku
 
 steps:
 
