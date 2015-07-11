@@ -7,13 +7,7 @@ steps:
 
 1. build the application inside docker using herokuish
 2. extract the "compiled" application (tgz)
-3. convert deis/slugrunner docker image required to run apps (slugrunner.aci)
+3. convert heroku/cedar:14 docker image required to run apps (slugrunner.aci)
 4. build an image for the compiled app using slugrunner.aci as dependency
-
-*TODO:*
-
-- [] create a rocket herokuish image (with all the required dependencies to build apps)
-- [] remove docker "dependency" :P
-- [] ...
-- [] ...
-
+5. launch a nginx container (as "registry")
+6. launch a docker container with rocket to download and run the application

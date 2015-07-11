@@ -1,12 +1,9 @@
-FROM ubuntu:trusty
+FROM ubuntu-debootstrap:15.04
 
-WORKDIR /tmp
+RUN apt-get update && apt-get install -y curl iptables
 
-ADD tools.tgz /usr/local/bin
+WORKDIR /
 
-#RUN rkt --debug run http://192.168.59.104:8080/aledbf/rocket-herokuish-nodejs.aci
+ADD . /
 
-RUN echo "url http://192.168.59.104:8080/aledbf/rocket-herokuish-nodejs.aci"
-
-ENTRYPOINT /bin/bash
-
+CMD /run.sh

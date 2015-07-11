@@ -4,10 +4,12 @@ set -eo pipefail
 
 [[ $DEBUG ]] && set -x
 
+# destroy a running container
 function removeContainer {
   docker rm -f $1 >/dev/null 2>&1 || true
 }
 
+# just for a pretty output
 function echo_section {
   echo ""
   echo "--------------------------------------"
@@ -15,7 +17,8 @@ function echo_section {
   echo "--------------------------------------"
 }
 
-# name directory file path
+# remove container, build a new version, extract a file and destroy the created container
+# args: name, buildDirectory, fileToExtract, outputPAth
 function buildAndCopy {
   removeContainer $1
   docker build -t $1 $2
@@ -23,12 +26,23 @@ function buildAndCopy {
   removeContainer $1
 }
 
+# remove container, copy rkt and appc, build a container and run the rocket image
+# args: name, directory
 function buildAndRun {
   removeContainer $1
+  copyRocketTools $2
   docker build -t $1 $2
-  docker run --name $1 --privileged -it $1
+  docker run --privileged --name $1 -p 5000:5000 $1
 }
 
+# copy rkt and actool to the specified directory
+function copyRocketTools {
+  cp tools/rkt $1
+  cp tools/actool $1
+  cp tools/stage1.aci $1
+}
+
+# remove any container related to this script
 function onExit {
   docker stop -t 1 rocket-registry >/dev/null 2>&1 || true
   removeContainer rocket-registry
@@ -38,59 +52,52 @@ function onExit {
 trap onExit INT TERM EXIT
 
 CURRENT_DIR=`pwd`
-DOCKER_IP=$1
-GITHUB_REPO=$2
-SLUGRUNNER=$3
+GITHUB_REPO=$1
+SLUGRUNNER=$2
 
-REGISTRY="registry/aledbf"
+APPC_VERSION=0.6.0
+RKT_VERSION=0.7.0
 
-ROCKET_BUILD="build-app-rocket-image"
-ROOTFS=$ROCKET_BUILD/demo/rootfs
+echo_section "installing rocket and appc tools..."
+mkdir -p tools
+cd tools
+if [ ! -f ./actool ]; then
+  curl -sSL https://github.com/appc/spec/releases/download/v$APPC_VERSION/appc-v$APPC_VERSION.tar.gz | tar -xvz --strip-components=1
+fi
 
-ROCKET_PARENT_ROOTFS=build-parent-image/slugrunner/rootfs
+if [ ! -f ./rkt ]; then
+  curl -sSL https://github.com/coreos/rkt/releases/download/v$RKT_VERSION/rkt-v$RKT_VERSION.tar.gz | tar -xvz --strip-components=1
+fi
 
-echo_section "cleaning..."
-rm -rf $ROOTFS $ROCKET_PARENT_ROOTFS *.tgz
-mkdir -p $ROOTFS/app $ROCKET_PARENT_ROOTFS
+cd ..
 
-echo_section "building rocket and actool..."
-buildAndCopy tools build-rocket-image /tools.tgz `pwd`
+echo_section "starting building process..."
 
-echo_section "copying tools..."
-cp tools.tgz build-app-rocket-image
-cp tools.tgz run
+echo_section "converting docker slugrunner image to rocket using docker2aci..."
+REGISTRY="$CURRENT_DIR/registry/aledbf"
+CEDAR_ACI="heroku-cedar-14-linux-amd64.aci"
+if [ ! -f $REGISTRY/$CEDAR_ACI ]; then
+  go get github.com/appc/docker2aci
+  docker2aci docker://$SLUGRUNNER
+  # the patch is required because the manifest is incomplete
+  ./actool patch-manifest --manifest=heroku-cedar.manifest heroku-cedar-14.aci $CEDAR_ACI
+  mv $CEDAR_ACI $REGISTRY/$CEDAR_ACI
+  # if the idea is to be able to create reproducible builds we need the sha of the cedar aci
+  #gzip -dc $REGISTRY/$CEDAR_ACI > temp.tar
+  #sha512sum temp.tar
+  #rm temp.tar
+fi
 
-# echo_section "starting building process..."
 DOCKER_BUILD="build-app-with-docker"
+copyRocketTools $DOCKER_BUILD
 cat $DOCKER_BUILD/Dockerfile.template | sed -e "s@#APP#@$GITHUB_REPO@" | sed -e "s@#SLUGRUNNER#@$SLUGRUNNER@" > $DOCKER_BUILD/Dockerfile
-buildAndCopy herokuish-builder $DOCKER_BUILD /tmp/slug.tgz $CURRENT_DIR
+buildAndCopy herokuish-builder $DOCKER_BUILD /tmp/rocket-herokuish-app.aci $REGISTRY
 
-echo_section "converting docker slugrunner image to rocket rootfs..."
-docker create --name docker-slugrunner dev-registry.soficom.cl:5000/soficom/slugrunner:v0.5
-docker export docker-slugrunner | tar -x -C $ROCKET_PARENT_ROOTFS -f -
-removeContainer docker-slugrunner
-
-echo_section "building rocket parent image..."
-buildAndCopy parent-image build-parent-image /tmp/slugrunner.aci $REGISTRY
-
-# osx alternative to sha512sum
-echo_section "generating sha512 from generated image"
-SHA512=`openssl dgst -sha512 $REGISTRY/slugrunner.aci | cut -d' ' -f 2 | cut -c1-33`
-cat $ROCKET_BUILD/manifest.template | sed -e "s@#SHA512#@$SHA512@" > $ROCKET_BUILD/demo/manifest
-
-echo_section "decompressing generated application tgz..."
-tar -xzf slug.tgz -C $ROOTFS/app
-
-echo_section "generating manifest..."
-
-echo_section "extracting rocket image from docker..."
-buildAndCopy $ROCKET_BUILD $ROCKET_BUILD /tmp/rocket-herokuish-nodejs.aci $REGISTRY
-
-echo_section "running rocket registry..."
-removeContainer rocket-registry
-docker run --name rocket-registry -p 8080:80 -v $CURRENT_DIR/registry:/usr/share/nginx/html:ro -d nginx
+# this section could be used to run the example locally
+#echo_section "running rocket registry..."
+#BOOT2DOCKER_IP=$(boot2docker ip 2>/dev/null)
+#removeContainer rocket-registry
+#docker run --name rocket-registry -p 80:80 -v $CURRENT_DIR/registry/aledbf:/usr/share/nginx/html:ro -d nginx
 
 echo_section "running rocket demo"
-cat run/Dockerfile.template | sed -e "s/#IP#/$1/" > run/Dockerfile
 buildAndRun run-demo run
-

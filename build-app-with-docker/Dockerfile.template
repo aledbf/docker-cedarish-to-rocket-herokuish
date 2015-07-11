@@ -5,14 +5,21 @@ USER root
 
 ENTRYPOINT /bin/bash
 
-RUN curl -sSL https://github.com/gliderlabs/herokuish/releases/download/v0.1.0/herokuish_0.1.0_linux_x86_64.tgz | tar -xzC /usr/local/bin && chmod 755 /usr/local/bin/herokuish
+RUN curl -sSL https://github.com/gliderlabs/herokuish/releases/download/v0.3.0/herokuish_0.3.0_linux_x86_64.tgz | tar -xzC \
+  /usr/local/bin && chmod 755 /usr/local/bin/herokuish
 
 RUN herokuish buildpack install
 
+ADD . /tmp
+
 RUN git clone #APP# /app
 
-RUN herokuish buildpack build
+RUN herokuish buildpack build && herokuish slug generate
 
-RUN herokuish slug generate
+RUN mkdir -p /tmp/rocket/demo/rootfs/app && tar -xzf /tmp/slug.tgz -C /tmp/rocket/demo/rootfs/app
 
-RUN ls /tmp
+RUN /tmp/actool validate /tmp/rocket/demo/
+
+RUN /tmp/actool --debug build /tmp/rocket/demo/ /tmp/rocket-herokuish-app.aci
+
+RUN ls -la /tmp/rocket-herokuish-app.aci
